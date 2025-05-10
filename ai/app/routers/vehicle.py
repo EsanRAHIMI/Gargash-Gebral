@@ -14,13 +14,15 @@ class VehicleStatusResponse(BaseModel):
     tire_pressure: Dict[str, float]  # in PSI for each tire
     battery_level: float  # percentage
 
+# Remove the Depends(get_current_user) to disable authentication
 @router.get("/status", response_model=VehicleStatusResponse)
-async def get_vehicle_status(user: Dict[str, Any] = Depends(get_current_user)):
+async def get_vehicle_status():
     """
     Get the current status of the vehicle including engine temperature,
     tire pressure, and battery level.
     
     Note: This endpoint currently returns mock values.
+    Authentication temporarily disabled.
     """
     # Generate mock values for demonstration purposes
     engine_temp = round(random.uniform(75.0, 105.0), 1)  # Normal range: 80-100°C
