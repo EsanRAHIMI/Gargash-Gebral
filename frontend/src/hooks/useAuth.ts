@@ -28,7 +28,10 @@ axios.defaults.withCredentials = true
 
 export const useAuth = () => {
   const queryClient = useQueryClient()
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
+  // Initialize from localStorage to maintain state across navigation
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
+    localStorage.getItem('isAuthenticated') === 'true'
+  )
 
   // Fetch the current user
   const { data: user, isLoading, error } = useQuery<User>(
@@ -38,9 +41,15 @@ export const useAuth = () => {
       return data
     },
     {
-      retry: false,
-      onSuccess: () => setIsAuthenticated(true),
-      onError: () => setIsAuthenticated(false),
+      retry: 1,
+      onSuccess: () => {
+        setIsAuthenticated(true)
+        localStorage.setItem('isAuthenticated', 'true')
+      },
+      onError: () => {
+        setIsAuthenticated(false)
+        localStorage.removeItem('isAuthenticated')
+      },
     }
   )
 
@@ -51,6 +60,7 @@ export const useAuth = () => {
       onSuccess: () => {
         queryClient.invalidateQueries('user')
         setIsAuthenticated(true)
+        localStorage.setItem('isAuthenticated', 'true')
       },
     }
   )
@@ -62,6 +72,7 @@ export const useAuth = () => {
       onSuccess: () => {
         queryClient.invalidateQueries('user')
         setIsAuthenticated(true)
+        localStorage.setItem('isAuthenticated', 'true')
       },
     }
   )
@@ -73,14 +84,15 @@ export const useAuth = () => {
       onSuccess: () => {
         queryClient.setQueryData('user', null)
         setIsAuthenticated(false)
+        localStorage.removeItem('isAuthenticated')
       },
     }
   )
 
+  // Rest of the code remains the same...
   const login = (credentials: LoginData) => loginMutation.mutate(credentials)
   const register = (userData: RegisterData) => registerMutation.mutate(userData)
   
-  // Return a Promise to ensure we can await the logout operation
   const logout = () => {
     return new Promise<void>((resolve, reject) => {
       logoutMutation.mutate(undefined, {
