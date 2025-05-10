@@ -1,9 +1,96 @@
+/* /frontend/src/styles/index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-     margin:0; font-family: sans-serif; 
-     @apply bg-gray-50;
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 dark:bg-slate-900 dark:text-gray-100;
+    font-family: 'Inter', 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+    transition-property: color, background-color;
+    transition-duration: 200ms;
+    transition-timing-function: ease-in-out;
+  }
 
-    }
+  /* Custom scrollbar for luxury feel */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100 dark:bg-slate-800 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-slate-600 rounded-full;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400 dark:bg-slate-500;
+  }
+}
+
+@layer components {
+  .luxury-card {
+    @apply bg-white dark:bg-slate-800 shadow-lg rounded-xl border border-gray-100 dark:border-gray-700;
+  }
+  
+  .luxury-button {
+    @apply px-4 py-2 bg-indigo-600 text-white rounded-md shadow-md hover:bg-indigo-700 transition-colors duration-200;
+  }
+  
+  .luxury-button-secondary {
+    @apply px-4 py-2 bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white rounded-md shadow-md hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors duration-200;
+  }
+  
+  .luxury-input {
+    @apply block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
+    placeholder-gray-400 dark:placeholder-gray-500
+    focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 
+    dark:bg-slate-700 dark:text-white;
+  }
+  
+  .luxury-label {
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
+  }
+  
+  /* Vehicle status specific styles */
+  .status-indicator {
+    @apply relative rounded-full flex items-center justify-center;
+  }
+  
+  .status-indicator::before {
+    content: '';
+    @apply absolute inset-0 rounded-full opacity-20 animate-ping;
+  }
+  
+  .status-optimal {
+    @apply bg-green-500 text-white;
+  }
+  
+  .status-optimal::before {
+    @apply bg-green-500;
+  }
+  
+  .status-warning {
+    @apply bg-yellow-500 text-white;
+  }
+  
+  .status-warning::before {
+    @apply bg-yellow-500;
+  }
+  
+  .status-critical {
+    @apply bg-red-500 text-white;
+  }
+  
+  .status-critical::before {
+    @apply bg-red-500;
+  }
+}
+
+/* Font import for luxury appearance */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
