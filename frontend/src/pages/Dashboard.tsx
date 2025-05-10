@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import VehicleHealthCard from '../components/VehicleHealthCard'
 
 const Dashboard = () => {
   const { user } = useAuth()
@@ -22,10 +23,16 @@ const Dashboard = () => {
               <div className="px-6 py-5">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Welcome, {user?.name}!</h2>
                 <p className="text-gray-600 mb-6">
-                  You're now logged in to the Gargash AI Hackathon application. Use the chat feature to start interacting with our AI assistant.
+                  You're now logged in to the Gebral AI Automotive Platform. Monitor your vehicle status and start interacting with our AI assistant.
                 </p>
                 
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-6 mb-6 lg:grid-cols-2">
+                  {/* Vehicle Health Card */}
+                  <div className="col-span-1">
+                    <VehicleHealthCard />
+                  </div>
+                  
+                  {/* AI Chat Card */}
                   <div className="bg-indigo-50 overflow-hidden shadow rounded-lg">
                     <div className="px-4 py-5 sm:p-6">
                       <div className="flex items-center">
@@ -40,7 +47,7 @@ const Dashboard = () => {
                           </dt>
                           <dd className="flex items-baseline">
                             <div className="text-lg font-semibold text-gray-900">
-                              Start a conversation
+                              Start a conversation with Gebral
                             </div>
                           </dd>
                         </div>
@@ -54,33 +61,34 @@ const Dashboard = () => {
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="bg-green-50 overflow-hidden shadow rounded-lg">
-                    <div className="px-4 py-5 sm:p-6">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 bg-green-500 rounded-md p-3">
-                          <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                        </div>
-                        <div className="ml-5 w-0 flex-1">
-                          <dt className="text-sm font-medium text-gray-500 truncate">
-                            Your Profile
-                          </dt>
-                          <dd className="flex items-baseline">
-                            <div className="text-lg font-semibold text-gray-900">
-                              {user?.email}
-                            </div>
-                          </dd>
-                        </div>
+                </div>
+                
+                {/* User Profile Card (remains the same) */}
+                <div className="bg-green-50 overflow-hidden shadow rounded-lg">
+                  <div className="px-4 py-5 sm:p-6">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 bg-green-500 rounded-md p-3">
+                        <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <div className="ml-5 w-0 flex-1">
+                        <dt className="text-sm font-medium text-gray-500 truncate">
+                          Your Profile
+                        </dt>
+                        <dd className="flex items-baseline">
+                          <div className="text-lg font-semibold text-gray-900">
+                            {user?.email}
+                          </div>
+                        </dd>
                       </div>
                     </div>
-                    <div className="bg-gray-50 px-4 py-4 sm:px-6">
-                      <div className="text-sm">
-                        <span className="font-medium text-green-600">
-                          Account active
-                        </span>
-                      </div>
+                  </div>
+                  <div className="bg-gray-50 px-4 py-4 sm:px-6">
+                    <div className="text-sm">
+                      <span className="font-medium text-green-600">
+                        Account active
+                      </span>
                     </div>
                   </div>
                 </div>

@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
 from dotenv import load_dotenv
-from .routers import chat
+from .routers import chat, vehicle
 from .auth import get_current_user
 
 # Load environment variables
@@ -30,6 +30,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(chat.router, prefix="/ai", tags=["chat"])
+app.include_router(vehicle.router, prefix="/vehicle", tags=["vehicle"])
 
 @app.get("/ai")
 async def ai_root():

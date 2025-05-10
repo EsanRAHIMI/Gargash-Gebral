@@ -25,7 +25,10 @@ Gebral/
 ├── api/         # Auth & User Management microservice using Express + MongoDB
 ├── frontend/    # React + Vite frontend UI
 ```
-
+FRONTEND_URL=http://localhost:3000
+VITE_BACKEND_URL=http://localhost:5002/api
+VITE_CHAT_URL=http://localhost:5003/ai
+VITE_AUTH_URL=http://localhost:5002/api/auth
 ---
 
 ## 🔧 Current Status (MVP)
@@ -82,7 +85,7 @@ yarn run start:dev
 
 **Stack:** React, Vite, TypeScript, TailwindCSS, React Router, React Query
 
-### Features
+### Features 
 
 * Home, Login, Register pages
 * Protected Dashboard and Chat views
