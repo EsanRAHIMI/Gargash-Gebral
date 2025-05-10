@@ -1,0 +1,110 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+.next/
+out/
+.yarn/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+pyvenv.cfg
+
+# Logs and Cache
+logs/
+cache/
+*.log
+*.cache
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+debug.log*
+log/
+*.out
+*.err
+
+# Database
+database/postgres/*
+database/redis/*
+!database/docker-compose.yml
+*.sqlite
+*.sqlite3
+*.db
+*.pdb
+
+# Prisma
+prisma/migrations/
+prisma/dev.db
+
+# Clerk.dev Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Docker
+docker-compose.override.yml
+docker-compose.yaml
+docker-compose.yml
+docker/
+*.dockerfile
+*.dockercfg
+.dockerignore
+
+# VSCode and IDE Configurations
+.vscode/
+*.code-workspace
+.idea/
+*.iml
+*.ipr
+*.iws
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Compiled and Temporary Files
+*.out
+*.o
+*.so
+*.a
+*.dSYM/
+*.dll
+*.exe
+
+# Python Packaging
+dist/
+build/
+*.egg-info/
+
+# Poetry & Pipenv dependencies
+poetry.lock
+Pipfile.lock
+
+# Other System Files
+check_system.sh
+system_summary.txt
+
+# Frontend Web
+frontend_web/tsconfig.tsbuildinfo
+
+# Backend API
+backend_api/tsconfig.tsbuildinfo
