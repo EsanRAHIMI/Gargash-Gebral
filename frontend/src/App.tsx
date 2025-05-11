@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Chat from './pages/Chat';
+import MainDriverEmotionSystem from './pages/MainDriverEmotionSystem';
 import ProtectedRoute from './components/ProtectedRoute';
 import FloatingVoiceButton from './components/FloatingVoiceButton';
 import { useAuth } from './hooks/useAuth';
@@ -45,6 +46,14 @@ const AppContent = () => {
             element={
               <ProtectedRoute>
                 <Chat />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/driver-emotion" 
+            element={
+              <ProtectedRoute>
+                <MainDriverEmotionSystem />
               </ProtectedRoute>
             } 
           />
