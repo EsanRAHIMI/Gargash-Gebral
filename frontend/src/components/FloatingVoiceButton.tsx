@@ -5,17 +5,66 @@ import axios from 'axios';
 
 const chatUrl = import.meta.env.VITE_CHAT_URL;
 
+// Test API endpoints function
+const testApiEndpoints = async () => {
+  try {
+    console.log("Testing API endpoints...");
+    
+    // Test health endpoint
+    try {
+      const healthResponse = await axios.get(`${chatUrl.replace('/ai', '')}/health`);
+      console.log("Health endpoint:", healthResponse.status, healthResponse.data);
+    } catch (error) {
+      console.error("Health endpoint failed:", error);
+    }
+    
+    // Test transcribe endpoint with a minimal request
+    try {
+      // Create a minimal audio blob (1 second of silence)
+      const testBlob = new Blob([new ArrayBuffer(1000)], { type: 'audio/webm' });
+      const formData = new FormData();
+      formData.append('file', testBlob, 'test.webm');
+      
+      const response = await axios.post(
+        `${chatUrl}/transcribe`,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          withCredentials: true
+        }
+      );
+      console.log("Transcribe endpoint:", response.status, response.data);
+    } catch (error) {
+      console.error("Transcribe endpoint failed:", error);
+    }
+  } catch (error) {
+    console.error("API test failed:", error);
+  }
+};
+
+interface Message {
+  text: string;
+  isUser: boolean;
+  isVoice?: boolean;
+}
+
 const FloatingVoiceButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [conversation, setConversation] = useState<Array<{text: string, isUser: boolean}>>([]);
+  const [conversation, setConversation] = useState<Message[]>([]);
   const [errorToast, setErrorToast] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
+  
+  // Test API endpoints on mount
+  useEffect(() => {
+    // Comment this out in production
+    // testApiEndpoints();
+  }, []);
   
   // Handle transcription
   const handleTranscription = async (text: string) => {
     try {
-      // Add user message to conversation
-      setConversation(prev => [...prev, { text, isUser: true }]);
+      // Add user message to conversation immediately
+      setConversation(prev => [...prev, { text, isUser: true, isVoice: true }]);
       
       // Get recent message history for context (last 5 messages)
       const recentMessages = conversation.slice(-5).map(msg => ({
@@ -23,27 +72,55 @@ const FloatingVoiceButton: React.FC = () => {
         content: msg.text
       }));
       
-      // Send to AI service
-      const response = await axios.post(chatUrl, {
-        message: text,
-        history: recentMessages
-      }, {
-        headers: { 'Content-Type': 'application/json' },
-        withCredentials: true
-      });
-      
-      const aiResponse = response.data.response;
-      
-      // Explicitly add AI response to conversation
-      setConversation(prev => [...prev, { text: aiResponse, isUser: false }]);
-      
-      // Return response for speech synthesis
-      return aiResponse;
+      // Send to AI service with timeout and error handling
+      try {
+        console.log("Sending voice transcription to AI:", text);
+        const response = await axios.post(chatUrl, {
+          message: text,
+          history: recentMessages
+        }, {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true,
+          timeout: 30000 // 30 seconds timeout
+        });
+        
+        const aiResponse = response.data.response;
+        console.log("Received AI response:", aiResponse.substring(0, 50) + "...");
+        
+        // Explicitly add AI response to conversation here
+        // This ensures it shows up even if voice synthesis fails
+        setTimeout(() => {
+          setConversation(prev => {
+            // Check if the response is already in the conversation to avoid duplicates
+            const exists = prev.some(msg => !msg.isUser && msg.text === aiResponse);
+            if (!exists) {
+              return [...prev, { text: aiResponse, isUser: false }];
+            }
+            return prev;
+          });
+        }, 100);
+        
+        // Return the AI response for speech synthesis
+        return aiResponse;
+      } catch (apiError) {
+        console.error('Error from chat API:', apiError);
+        
+        // Add a fallback response message to the conversation
+        const fallbackResponse = "I'm having trouble responding right now. Please try again in a moment.";
+        setConversation(prev => [...prev, { text: fallbackResponse, isUser: false }]);
+        
+        // Show error toast
+        setApiError(apiError instanceof Error ? apiError.message : 'Failed to get AI response');
+        setErrorToast('Failed to get AI response. Please try again.');
+        
+        // Return fallback response
+        return fallbackResponse;
+      }
     } catch (error) {
-      console.error('Error sending transcribed message:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to get AI response';
+      console.error('Error in voice chat flow:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to process voice message';
       setApiError(errorMessage);
-      setErrorToast('Failed to get AI response. Please try again.');
+      setErrorToast('Failed to process voice message. Please try again.');
       return '';
     }
   };
@@ -149,6 +226,11 @@ const FloatingVoiceButton: React.FC = () => {
                     }`}
                   >
                     {msg.text}
+                    {msg.isVoice && (
+                      <span className="ml-2 text-xs opacity-75">
+                        🎤
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>

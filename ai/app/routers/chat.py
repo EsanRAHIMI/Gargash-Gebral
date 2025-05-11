@@ -79,6 +79,98 @@ async def chat_with_ai(request: Request, chat_request: ChatRequest, user: Dict[s
         print(f"General error in chat_with_ai: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
 
+@router.post("/synthesize")
+async def synthesize_speech(
+    request: Request, 
+    request_data: dict, 
+    user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Convert text to speech using OpenAI's TTS API.
+    """
+    try:
+        text = request_data.get("text")
+        if not text:
+            raise HTTPException(status_code=400, detail="Text is required")
+        
+        # Determine OpenAI API version and use appropriate method
+        openai_version = getattr(openai, "__version__", "0.0.0")
+        print(f"Using OpenAI version: {openai_version}")
+        
+        try:
+            # New API format for OpenAI >= 1.0.0
+            if hasattr(openai, "audio") and hasattr(openai.audio, "speech"):
+                print("Using new OpenAI API format")
+                response = openai.audio.speech.create(
+                    model="tts-1",
+                    voice="shimmer",
+                    input=text
+                )
+                audio_data = response.content
+            # Legacy API format
+            else:
+                print("Using legacy OpenAI API format")
+                response = openai.Audio.create(
+                    model="tts-1",
+                    voice="shimmer",
+                    input=text
+                )
+                audio_data = response.content
+                
+            # For debugging, output data type and size
+            print(f"Audio data type: {type(audio_data)}, size: {len(audio_data)} bytes")
+            
+            # Return streaming response with audio data and CORS headers
+            return StreamingResponse(
+                io.BytesIO(audio_data), 
+                media_type="audio/mpeg",
+                headers={
+                    "Content-Disposition": "attachment; filename=response.mp3",
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Headers": "Content-Type",
+                    "Access-Control-Allow-Methods": "POST, OPTIONS"
+                }
+            )
+        except (AttributeError, TypeError) as api_error:
+            print(f"OpenAI API structure error: {str(api_error)}")
+            # Attempt direct OpenAI API call as last resort
+            import requests
+            
+            headers = {
+                "Authorization": f"Bearer {openai.api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "model": "tts-1",
+                "voice": "shimmer",
+                "input": text
+            }
+            
+            api_response = requests.post(
+                "https://api.openai.com/v1/audio/speech",
+                headers=headers,
+                json=payload
+            )
+            
+            if api_response.status_code == 200:
+                audio_data = api_response.content
+                return StreamingResponse(
+                    io.BytesIO(audio_data),
+                    media_type="audio/mpeg",
+                    headers={"Content-Disposition": "attachment; filename=response.mp3"}
+                )
+            else:
+                raise HTTPException(
+                    status_code=api_response.status_code, 
+                    detail=f"OpenAI API error: {api_response.text}"
+                )
+    except Exception as e:
+        print(f"Speech synthesis error: {str(e)}")
+        # Return a user-friendly error with more details
+        error_message = f"Error generating speech: {str(e)}"
+        raise HTTPException(status_code=500, detail=error_message)
+
 @router.post("/transcribe")
 async def transcribe_audio(
     request: Request, 
@@ -95,61 +187,64 @@ async def transcribe_audio(
             temp_file.write(await file.read())
             temp_filename = temp_file.name
         
-        # Transcribe using OpenAI Whisper API
-        with open(temp_filename, "rb") as audio_file:
-            transcript = openai.Audio.transcribe(
-                model="whisper-1",
-                file=audio_file
-            )
+        # Determine OpenAI API version and use appropriate method
+        openai_version = getattr(openai, "__version__", "0.0.0")
+        print(f"Using OpenAI version for transcription: {openai_version}")
+        
+        try:
+            # Transcribe using OpenAI Whisper API - new API format
+            if hasattr(openai, "audio") and hasattr(openai.audio, "transcriptions"):
+                print("Using new OpenAI API format for transcription")
+                with open(temp_filename, "rb") as audio_file:
+                    transcript = openai.audio.transcriptions.create(
+                        model="whisper-1",
+                        file=audio_file
+                    )
+                    transcribed_text = transcript.text
+            # Legacy API format
+            else:
+                print("Using legacy OpenAI API format for transcription")
+                with open(temp_filename, "rb") as audio_file:
+                    transcript = openai.Audio.transcribe(
+                        model="whisper-1",
+                        file=audio_file
+                    )
+                    transcribed_text = transcript.text
+        except (AttributeError, TypeError) as api_error:
+            print(f"OpenAI API structure error for transcription: {str(api_error)}")
+            # Attempt direct OpenAI API call as last resort
+            import requests
+            
+            headers = {
+                "Authorization": f"Bearer {openai.api_key}"
+            }
+            
+            with open(temp_filename, "rb") as audio_file:
+                files = {
+                    "file": ("audio.webm", audio_file, "audio/webm"),
+                    "model": (None, "whisper-1")
+                }
+                
+                api_response = requests.post(
+                    "https://api.openai.com/v1/audio/transcriptions",
+                    headers=headers,
+                    files=files
+                )
+                
+                if api_response.status_code == 200:
+                    transcribed_text = api_response.json().get("text", "")
+                else:
+                    raise HTTPException(
+                        status_code=api_response.status_code, 
+                        detail=f"OpenAI API error: {api_response.text}"
+                    )
         
         # Delete the temp file
         os.unlink(temp_filename)
         
         # Return the transcribed text
-        return {"text": transcript.text}
+        print(f"Transcribed text: {transcribed_text}")
+        return {"text": transcribed_text}
     except Exception as e:
+        print(f"Transcription error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error transcribing audio: {str(e)}")
-
-@router.post("/synthesize")
-async def synthesize_speech(
-    request: Request, 
-    request_data: dict, 
-    user: Dict[str, Any] = Depends(get_current_user)
-):
-    """
-    Convert text to speech using OpenAI's TTS API.
-    """
-    try:
-        text = request_data.get("text")
-        if not text:
-            raise HTTPException(status_code=400, detail="Text is required")
-        
-        # Fix for the Audio.create issue - use the correct API call format
-        try:
-            # Updated OpenAI TTS API call
-            response = openai.audio.speech.create(
-                model="tts-1",
-                voice="shimmer",
-                input=text
-            )
-            
-            # Get audio content as bytes
-            audio_data = response.content
-        except AttributeError:
-            # Fallback for older OpenAI API versions
-            response = openai.Audio.create(
-                model="tts-1",
-                voice="shimmer",
-                input=text
-            )
-            audio_data = response.content
-        
-        # Return streaming response with audio data
-        return StreamingResponse(
-            io.BytesIO(audio_data), 
-            media_type="audio/mpeg",
-            headers={"Content-Disposition": "attachment; filename=response.mp3"}
-        )
-    except Exception as e:
-        print(f"Speech synthesis error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error generating speech: {str(e)}")
