@@ -123,11 +123,26 @@ const VehicleHealthCard = () => {
         {status && (
           <div>
             {/* Vehicle Graphic with Status */}
-            <VehicleGraphic 
-              engineTemp={status.engine_temp}
-              batteryLevel={status.battery_level}
-              tirePressure={status.tire_pressure}
-            />
+            {status.engine_temp !== undefined && 
+             status.battery_level !== undefined && 
+             status.tire_pressure && 
+             Object.keys(status.tire_pressure).length === 4 &&
+             typeof status.engine_temp === 'number' && !isNaN(status.engine_temp) &&
+             typeof status.battery_level === 'number' && !isNaN(status.battery_level) &&
+             typeof status.tire_pressure.front_left === 'number' && !isNaN(status.tire_pressure.front_left) &&
+             typeof status.tire_pressure.front_right === 'number' && !isNaN(status.tire_pressure.front_right) &&
+             typeof status.tire_pressure.rear_left === 'number' && !isNaN(status.tire_pressure.rear_left) &&
+             typeof status.tire_pressure.rear_right === 'number' && !isNaN(status.tire_pressure.rear_right) ? (
+              <VehicleGraphic 
+                engineTemp={status.engine_temp}
+                batteryLevel={status.battery_level}
+                tirePressure={status.tire_pressure}
+              />
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500 dark:text-gray-400">داده‌های خودرو ناقص است. لطفاً دوباره تلاش کنید.</p>
+              </div>
+            )}
             
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-6 pt-4 border-t border-gray-100 dark:border-gray-800">
               <div className="flex items-center text-indigo-600 dark:text-indigo-400 mb-3 sm:mb-0">
