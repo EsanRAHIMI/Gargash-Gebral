@@ -61,13 +61,14 @@ const VehicleGraphic: React.FC<VehicleGraphicProps> = ({
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6">
-      {/* Luxury Car SVG visualization */}
-      <div className="w-full lg:w-3/5 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 shadow-2xl">
+    <div className="flex flex-col xl:flex-row gap-6">
+      {/* Luxury Car SVG visualization - increased width on larger screens */}
+      <div className="w-full xl:w-2/3 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-4 md:p-6 shadow-2xl">
         <svg 
           viewBox="0 0 1000 500" 
-          className="w-full h-auto"
+          className="w-full h-auto max-h-[450px]"
           xmlns="http://www.w3.org/2000/svg"
+          preserveAspectRatio="xMidYMid meet"
         >
           {/* Subtle grid background with luxury feel */}
           <pattern id="luxury-grid" width="30" height="30" patternUnits="userSpaceOnUse">
@@ -179,7 +180,7 @@ const VehicleGraphic: React.FC<VehicleGraphicProps> = ({
                 <circle cx="0" cy="0" r="25" fill={getTireColor(tirePressure.front_left)} opacity="0.9" />
                 <circle cx="0" cy="0" r="15" fill="#0f172a" />
                 <circle cx="0" cy="0" r="5" fill="#e2e8f0" />
-                <text x="0" y="0" fontSize="10" fill="white" textAnchor="middle" alignmentBaseline="middle" fontWeight="bold">FL</text>
+                <text x="0" y="0" fontSize="10" fill="white" textAnchor="middle" dominantBaseline="middle" fontWeight="bold">FL</text>
                 
                 {/* Luxury rim details */}
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -202,7 +203,7 @@ const VehicleGraphic: React.FC<VehicleGraphicProps> = ({
                 <circle cx="0" cy="0" r="25" fill={getTireColor(tirePressure.front_right)} opacity="0.9" />
                 <circle cx="0" cy="0" r="15" fill="#0f172a" />
                 <circle cx="0" cy="0" r="5" fill="#e2e8f0" />
-                <text x="0" y="0" fontSize="10" fill="white" textAnchor="middle" alignmentBaseline="middle" fontWeight="bold">FR</text>
+                <text x="0" y="0" fontSize="10" fill="white" textAnchor="middle" dominantBaseline="middle" fontWeight="bold">FR</text>
                 
                 {/* Luxury rim details */}
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -225,7 +226,7 @@ const VehicleGraphic: React.FC<VehicleGraphicProps> = ({
                 <circle cx="0" cy="0" r="25" fill={getTireColor(tirePressure.rear_left)} opacity="0.9" />
                 <circle cx="0" cy="0" r="15" fill="#0f172a" />
                 <circle cx="0" cy="0" r="5" fill="#e2e8f0" />
-                <text x="0" y="0" fontSize="10" fill="white" textAnchor="middle" alignmentBaseline="middle" fontWeight="bold">RL</text>
+                <text x="0" y="0" fontSize="10" fill="white" textAnchor="middle" dominantBaseline="middle" fontWeight="bold">RL</text>
                 
                 {/* Luxury rim details */}
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -248,7 +249,7 @@ const VehicleGraphic: React.FC<VehicleGraphicProps> = ({
                 <circle cx="0" cy="0" r="25" fill={getTireColor(tirePressure.rear_right)} opacity="0.9" />
                 <circle cx="0" cy="0" r="15" fill="#0f172a" />
                 <circle cx="0" cy="0" r="5" fill="#e2e8f0" />
-                <text x="0" y="0" fontSize="10" fill="white" textAnchor="middle" alignmentBaseline="middle" fontWeight="bold">RR</text>
+                <text x="0" y="0" fontSize="10" fill="white" textAnchor="middle" dominantBaseline="middle" fontWeight="bold">RR</text>
                 
                 {/* Luxury rim details */}
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -325,7 +326,7 @@ const VehicleGraphic: React.FC<VehicleGraphicProps> = ({
                 fontSize="12" 
                 fill={getEngineColor(engineTemp)}
                 textAnchor="middle" 
-                alignmentBaseline="middle"
+                dominantBaseline="middle"
                 fontWeight="bold"
               >{getStatusIcon(getEngineStatus(engineTemp))}</text>
             </g>
@@ -399,7 +400,7 @@ const VehicleGraphic: React.FC<VehicleGraphicProps> = ({
                 fontSize="12" 
                 fill={getBatteryColor(batteryLevel)}
                 textAnchor="middle" 
-                alignmentBaseline="middle"
+                dominantBaseline="middle"
                 fontWeight="bold"
               >{getStatusIcon(getBatteryStatus(batteryLevel))}</text>
             </g>
@@ -464,7 +465,7 @@ const VehicleGraphic: React.FC<VehicleGraphicProps> = ({
       </div>
       
       {/* Status Details Panel - Modern UI */}
-      <div className="w-full lg:w-2/5 bg-white dark:bg-slate-800 rounded-xl p-6 shadow-xl">
+      <div className="w-full xl:w-1/3 bg-white dark:bg-slate-800 rounded-xl p-4 md:p-6 shadow-xl">
         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Vehicle Diagnostics</h3>
         
         <div className="space-y-6">
@@ -473,7 +474,7 @@ const VehicleGraphic: React.FC<VehicleGraphicProps> = ({
             <div className="flex justify-between items-center">
               <div className="flex items-center">
                 <div className="p-2 rounded-full mr-3" style={{backgroundColor: getEngineColor(engineTemp)}}>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
@@ -509,7 +510,7 @@ const VehicleGraphic: React.FC<VehicleGraphicProps> = ({
             <div className="flex justify-between items-center">
               <div className="flex items-center">
                 <div className="p-2 rounded-full mr-3" style={{backgroundColor: getBatteryColor(batteryLevel)}}>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <rect x="2" y="7" width="16" height="10" rx="2" ry="2" />
                     <line x1="22" y1="11" x2="22" y2="13" />
                     <line x1="18" y1="9" x2="18" y2="15" />
@@ -546,7 +547,7 @@ const VehicleGraphic: React.FC<VehicleGraphicProps> = ({
           <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-4">
             <div className="flex items-center mb-4">
               <div className="p-2 rounded-full mr-3 bg-indigo-600">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10" />
                   <circle cx="12" cy="12" r="3" />
                 </svg>
