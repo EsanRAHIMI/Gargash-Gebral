@@ -1,15 +1,39 @@
 // src/pages/Chat.tsx
 import { useState, useRef, useEffect } from 'react';
+import axios from 'axios';
 import { useChat } from '../hooks/useChat';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ChatMessage from '../components/ChatMessage';
 import VoiceChatButton from '../components/VoiceChatButton';
 
+const chatUrl = import.meta.env.VITE_CHAT_URL;
+
 const Chat = () => {
   const [message, setMessage] = useState('');
+  const [apiStatus, setApiStatus] = useState<'healthy' | 'unhealthy' | 'checking'>('checking');
+  const [apiError, setApiError] = useState<string | null>(null);
   const { messages, sendMessage, isLoading } = useChat();
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Test API connection on component mount
+  useEffect(() => {
+    const testApi = async () => {
+      try {
+        const response = await axios.get(`${chatUrl.replace('/ai', '')}/health`);
+        console.log('API health check:', response.data);
+        setApiStatus('healthy');
+        setApiError(null);
+      } catch (error) {
+        console.error('API health check failed:', error);
+        setApiStatus('unhealthy');
+        const errorMessage = error instanceof Error ? error.message : 'Failed to connect to API';
+        setApiError(errorMessage);
+      }
+    };
+    
+    testApi();
+  }, []);
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -35,6 +59,8 @@ const Chat = () => {
         return response;
       } catch (error) {
         console.error('Error processing voice message:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to process voice message';
+        setApiError(errorMessage);
         return '';
       }
     }
@@ -48,6 +74,33 @@ const Chat = () => {
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">AI Chat</h1>
           <p className="text-gray-600 dark:text-gray-400">Ask any question and get an intelligent response.</p>
+          
+          {/* API Status Indicator */}
+          <div className={`mt-2 p-2 rounded-md text-sm ${
+            apiStatus === 'healthy' 
+              ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+              : apiStatus === 'unhealthy'
+              ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+          }`}>
+            {apiStatus === 'healthy' && 'API connection is healthy'}
+            {apiStatus === 'unhealthy' && 'API connection failed. Please check your connection.'}
+            {apiStatus === 'checking' && 'Checking API connection...'}
+          </div>
+          
+          {/* API Error Message */}
+          {apiError && (
+            <div className="mt-2 p-3 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 rounded-md shadow-md">
+              <div className="font-medium">Connection Error</div>
+              <div className="text-sm">{apiError}</div>
+              <button 
+                onClick={() => setApiError(null)}
+                className="text-xs text-red-700 dark:text-red-300 hover:underline mt-2"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
         </div>
         
         {/* Chat Container */}

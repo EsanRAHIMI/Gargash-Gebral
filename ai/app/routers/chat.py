@@ -1,5 +1,5 @@
 # /ai/app/routers/chat.py
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Dict, Any, List, Optional
@@ -29,7 +29,7 @@ class ChatResponse(BaseModel):
     response: str
 
 @router.post("", response_model=ChatResponse)
-async def chat_with_ai(request: ChatRequest, user: Dict[str, Any] = Depends(get_current_user)):
+async def chat_with_ai(request: Request, chat_request: ChatRequest, user: Dict[str, Any] = Depends(get_current_user)):
     """
     Send a message to the AI and get a response.
     """
@@ -44,8 +44,8 @@ async def chat_with_ai(request: ChatRequest, user: Dict[str, Any] = Depends(get_
         })
         
         # Add conversation history if provided
-        if request.history:
-            for msg in request.history:
+        if chat_request.history:
+            for msg in chat_request.history:
                 messages.append({
                     "role": msg.role,
                     "content": msg.content
@@ -54,25 +54,37 @@ async def chat_with_ai(request: ChatRequest, user: Dict[str, Any] = Depends(get_
         # Add current user message
         messages.append({
             "role": "user",
-            "content": request.message
+            "content": chat_request.message
         })
         
-        # Call OpenAI Chat API with GPT-4o
-        completion = openai.ChatCompletion.create(
-            model="gpt-4o",  # Use GPT-4o model
-            messages=messages,
-            max_tokens=1000,
-            temperature=0.7,
-        )
+        # Use try-except specifically for OpenAI API call
+        try:
+            # Call OpenAI Chat API (using the updated client syntax)
+            response = openai.ChatCompletion.create(
+                model="gpt-4",  # Or fallback to gpt-3.5-turbo if needed
+                messages=messages,
+                max_tokens=1000,
+                temperature=0.7,
+            )
+            
+            # Extract and return the response
+            ai_response = response.choices[0].message.content.strip()
+        except Exception as openai_error:
+            print(f"OpenAI API error: {str(openai_error)}")
+            # Fallback to a simpler call or default message
+            ai_response = "I'm having trouble connecting to my knowledge base. Please try again in a moment."
         
-        # Extract and return the response
-        ai_response = completion.choices[0].message.content.strip()
         return ChatResponse(response=ai_response)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error communicating with OpenAI: {str(e)}")
+        print(f"General error in chat_with_ai: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
 
 @router.post("/transcribe")
-async def transcribe_audio(file: UploadFile = File(...), user: Dict[str, Any] = Depends(get_current_user)):
+async def transcribe_audio(
+    request: Request, 
+    file: UploadFile = File(...), 
+    user: Dict[str, Any] = Depends(get_current_user)
+):
     """
     Transcribe audio to text using OpenAI's Whisper model.
     """
@@ -99,27 +111,45 @@ async def transcribe_audio(file: UploadFile = File(...), user: Dict[str, Any] = 
         raise HTTPException(status_code=500, detail=f"Error transcribing audio: {str(e)}")
 
 @router.post("/synthesize")
-async def synthesize_speech(request: dict, user: Dict[str, Any] = Depends(get_current_user)):
+async def synthesize_speech(
+    request: Request, 
+    request_data: dict, 
+    user: Dict[str, Any] = Depends(get_current_user)
+):
     """
     Convert text to speech using OpenAI's TTS API.
     """
     try:
-        text = request.get("text")
+        text = request_data.get("text")
         if not text:
             raise HTTPException(status_code=400, detail="Text is required")
         
-        # Convert text to speech using OpenAI TTS API
-        response = openai.Audio.create(
-            model="tts-1",
-            voice="shimmer",
-            input=text
-        )
+        # Fix for the Audio.create issue - use the correct API call format
+        try:
+            # Updated OpenAI TTS API call
+            response = openai.audio.speech.create(
+                model="tts-1",
+                voice="shimmer",
+                input=text
+            )
+            
+            # Get audio content as bytes
+            audio_data = response.content
+        except AttributeError:
+            # Fallback for older OpenAI API versions
+            response = openai.Audio.create(
+                model="tts-1",
+                voice="shimmer",
+                input=text
+            )
+            audio_data = response.content
         
         # Return streaming response with audio data
         return StreamingResponse(
-            io.BytesIO(response.content), 
+            io.BytesIO(audio_data), 
             media_type="audio/mpeg",
             headers={"Content-Disposition": "attachment; filename=response.mp3"}
         )
     except Exception as e:
+        print(f"Speech synthesis error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating speech: {str(e)}")

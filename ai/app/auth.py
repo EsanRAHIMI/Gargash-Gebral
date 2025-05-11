@@ -1,7 +1,7 @@
 # /ai/app/auth.py
 import os
 import httpx
-from fastapi import Header, HTTPException, Depends
+from fastapi import Header, HTTPException, Depends, Cookie, Request
 from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 
@@ -11,14 +11,27 @@ load_dotenv()
 # Auth service URL
 AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://localhost:5002/api/auth")
 
-async def get_current_user(authorization: Optional[str] = Header(None)) -> Dict[str, Any]:
+async def get_current_user(
+    request: Request,
+    authorization: Optional[str] = Header(None)
+) -> Dict[str, Any]:
     """
     Verify JWT token with auth service and return user information.
+    Token can be provided either via Authorization header or cookies.
     """
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+    token = None
     
-    token = authorization.replace("Bearer ", "")
+    # Check Authorization header first
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.replace("Bearer ", "")
+    
+    # If no token in header, check cookies
+    if not token:
+        token = request.cookies.get("token")
+    
+    # If still no token, authentication fails
+    if not token:
+        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
     
     # Call auth service to verify token
     async with httpx.AsyncClient() as client:

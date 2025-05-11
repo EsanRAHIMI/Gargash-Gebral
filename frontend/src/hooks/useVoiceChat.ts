@@ -53,13 +53,34 @@ export const useVoiceChat = ({ onTranscription, onAiResponse }: UseVoiceChatProp
       }));
       audioChunksRef.current = [];
       
-      // Request microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Add more specific constraints for better compatibility
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      
       streamRef.current = stream;
       
-      // Create media recorder
-      const mediaRecorder = new MediaRecorder(stream);
+      // Create media recorder with specific MIME type
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm') 
+        ? 'audio/webm' 
+        : 'audio/mp4';
+      
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
+      
+      // Add explicit error handler
+      mediaRecorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event);
+        setState(prev => ({ 
+          ...prev, 
+          isRecording: false,
+          error: 'Error recording audio' 
+        }));
+      };
       
       // Handle data available event
       mediaRecorder.ondataavailable = (event) => {
@@ -76,8 +97,8 @@ export const useVoiceChat = ({ onTranscription, onAiResponse }: UseVoiceChatProp
         }
       };
       
-      // Start recording
-      mediaRecorder.start();
+      // Start recording with timeslice for more frequent data chunks
+      mediaRecorder.start(1000); // Get data every second
     } catch (error) {
       console.error('Error starting recording:', error);
       setState(prev => ({ 
@@ -188,8 +209,8 @@ export const useVoiceChat = ({ onTranscription, onAiResponse }: UseVoiceChatProp
           audioRef.current?.removeEventListener('ended', onEnded);
           setState(prev => ({ ...prev, isProcessing: false }));
           
-          // Add response to the chat
-          onAiResponse(text);
+          // Add response to the chat with UI refresh
+          handleAiResponse(text);
         };
         
         audioRef.current.addEventListener('ended', onEnded);
@@ -199,7 +220,7 @@ export const useVoiceChat = ({ onTranscription, onAiResponse }: UseVoiceChatProp
           audioRef.current?.play().catch(error => {
             console.error('Error playing audio:', error);
             setState(prev => ({ ...prev, isProcessing: false }));
-            onAiResponse(text); // Still add text response even if audio fails
+            handleAiResponse(text); // Still add text response even if audio fails
           });
         }, 800);
       }
@@ -211,10 +232,21 @@ export const useVoiceChat = ({ onTranscription, onAiResponse }: UseVoiceChatProp
         error: 'Failed to play voice response' 
       }));
       
-      // Still add the response as text
-      onAiResponse(text);
+      // Still add the response as text with UI refresh
+      handleAiResponse(text);
     }
   };
+
+  // Handle AI response with UI refresh
+  const handleAiResponse = useCallback((text: string) => {
+    // Call the original callback to add text to the chat
+    onAiResponse(text);
+    
+    // Force UI refresh
+    setTimeout(() => {
+      window.dispatchEvent(new Event('chat-updated'));
+    }, 100);
+  }, [onAiResponse]);
 
   // Toggle recording state
   const toggleRecording = useCallback(() => {

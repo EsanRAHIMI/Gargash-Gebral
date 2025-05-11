@@ -9,6 +9,7 @@ const FloatingVoiceButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [conversation, setConversation] = useState<Array<{text: string, isUser: boolean}>>([]);
   const [errorToast, setErrorToast] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
   
   // Handle transcription
   const handleTranscription = async (text: string) => {
@@ -33,10 +34,15 @@ const FloatingVoiceButton: React.FC = () => {
       
       const aiResponse = response.data.response;
       
+      // Explicitly add AI response to conversation
+      setConversation(prev => [...prev, { text: aiResponse, isUser: false }]);
+      
       // Return response for speech synthesis
       return aiResponse;
     } catch (error) {
       console.error('Error sending transcribed message:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get AI response';
+      setApiError(errorMessage);
       setErrorToast('Failed to get AI response. Please try again.');
       return '';
     }
@@ -44,7 +50,8 @@ const FloatingVoiceButton: React.FC = () => {
   
   // Handle AI response
   const handleAiResponse = (text: string) => {
-    setConversation(prev => [...prev, { text, isUser: false }]);
+    // No need to add to conversation here as it's already added in handleTranscription
+    // This is kept for compatibility with useVoiceChat hook
   };
   
   // Initialize voice chat
@@ -70,6 +77,7 @@ const FloatingVoiceButton: React.FC = () => {
   useEffect(() => {
     if (error) {
       setErrorToast(error);
+      setApiError(error);
       
       const timer = setTimeout(() => {
         setErrorToast(null);
@@ -91,6 +99,20 @@ const FloatingVoiceButton: React.FC = () => {
   
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+      {/* API Error Message */}
+      {apiError && (
+        <div className="p-3 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 rounded-md shadow-md mb-4 max-w-xs">
+          <div className="font-medium">Connection Error</div>
+          <div className="text-sm">{apiError}</div>
+          <button 
+            onClick={() => setApiError(null)}
+            className="text-xs text-red-700 dark:text-red-300 hover:underline mt-2"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+      
       {/* Error Toast */}
       {errorToast && (
         <div className="mb-4 p-2 bg-red-100 dark:bg-red-900/60 text-red-800 dark:text-red-200 text-sm rounded-md shadow-md max-w-xs">

@@ -40,8 +40,8 @@ export const useChat = () => {
       }, {
         headers: {
           'Content-Type': 'application/json',
-          // The token is sent via cookie by default since withCredentials is true
-        }
+        },
+        withCredentials: true  // Send cookies
       });
       
       // Get the AI response text
