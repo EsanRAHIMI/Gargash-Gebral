@@ -31,6 +31,20 @@ module.exports = {
         'luxury-gradient': 'linear-gradient(to right, #1e293b, #334155, #1e293b)',
         'luxury-dashboard': 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
       },
+      keyframes: {
+        pulse: {
+          '0%, 100%': { opacity: 1 },
+          '50%': { opacity: 0.5 },
+        },
+        'sound-wave': {
+          '0%, 100%': { height: '5px' },
+          '50%': { height: '16px' },
+        }
+      },
+      animation: {
+        pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'sound-wave': 'sound-wave 1.2s ease-in-out infinite',
+      },
     } 
   },
   plugins: [],
